@@ -1,8 +1,8 @@
-/*import { db } from "../server";
+import db from "../db.js";
 
 const hiringTable = () => {
   try {
-    const table = db.prepare(`
+    db.exec(`
         CREATE TABLE IF NOT EXISTS hiring (
         id INTEGER PRIMARY KEY AUTOINCRENENT,
         user_id INTEGER NOT NULL,
@@ -11,11 +11,28 @@ const hiringTable = () => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-    table.run();
+
+    console.log("✅ جدول users ایجاد شد");
+
   } catch (err: any) {
     console.error(err.message);
   }
 };
 
-export default hiringTable;
-*/
+hiringTable();
+
+interface IFilling {
+  user_id : number,
+  resume: string
+}
+
+const hiringModel = {
+  filling: (data: IFilling) => {
+    const stmt = db.prepare(`
+      INSERT INTO hiring (user_id, resume)
+      VALUES (?, ?)`);
+    return stmt.get(data);
+  }
+};
+
+export default hiringModel;

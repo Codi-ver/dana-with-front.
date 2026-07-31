@@ -3,10 +3,9 @@ import express from "express";
 const router = express.Router();
 import authMiddleware from "../middlewares/auth.js";
 import isAdminMiddleware from "../middlewares/isAdmin.js";
-
 import {
   getAll,
-  sendMessage,
+  createComment,
   getOne,
   answer,
   deleteComment,
@@ -15,7 +14,7 @@ import {
 router
   .route("/")
   .get(authMiddleware, isAdminMiddleware, getAll)
-  .post(authMiddleware, sendMessage);
+  .post(authMiddleware, createComment);
 router
   .route("/:id")
   .get(authMiddleware, isAdminMiddleware, getOne)

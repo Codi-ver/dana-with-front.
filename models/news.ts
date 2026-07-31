@@ -1,8 +1,8 @@
-/*import db from "../server";
+import db from "../db.js";
 
 const newsTable = () => {
   try {
-    const table = db.prepare(`
+    db.exec(`
         CREATE TABLE IF NOT EXIST news (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         event TEXT NUT NULL,
@@ -13,11 +13,55 @@ const newsTable = () => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-    table.run();
+    console.log("✅ جدول users ایجاد شد");
+
   } catch (err: any) {
     console.error(err.message);
   }
 };
 
-export default newsTable;
-*/
+newsTable();
+
+interface ICreate {
+  event: string,
+  image: string,
+  author_id: number
+}
+
+const newsModel = {
+  getAll: () => {
+    const stmt = db.prepare(`SELECT * FROM news`);
+    return stmt.get();
+
+  },
+  create: (data: ICreate) => {
+    const stmt = db.prepare(`
+      SELECT INTO news (event, emage, author_id)
+      VALUES (?, ?, ?)`);
+    
+    return stmt.run(data);
+
+  },
+  deleteNew: (id: number) => {
+    const stmt = db.prepare(`
+      DELETE * FROM news WHERE id = ?`);
+
+    return stmt.run(id);
+  },
+  getOne: (id: number) => {
+    const stmt = db.prepare(`
+      SELECT * FROM news WHERE id = ?`);
+    return stmt.get(id);
+
+  }, 
+  publish: (event: string, status: string) => {
+    const stmt = db.prepare(`
+      SELECT INTO news (event, status) 
+      VALUES (?, ?)`);
+
+    return stmt.run(event, status);
+  },
+  
+  update: () => {}
+}
+export default newsModel;

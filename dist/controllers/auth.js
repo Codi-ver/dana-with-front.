@@ -2,12 +2,12 @@
 import db from "../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import authModel from "../models/users.js";
+import authModel from "../models/auth.js";
 
 const register = async (req, res) => { 
     try {
 
-        const { name, email, password, city, age, phone, skill } = req.body;
+        const { name, email, password, city, age, phone, skill, role } = req.body;
 
         // console.log(req.body); true 
 
@@ -34,7 +34,7 @@ const register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        // console.log(hashedPassword); 
+        // console.log(hashedPassword); true
  
         const result = await authModel.createUser({  //  this 
             name, 
@@ -43,12 +43,13 @@ const register = async (req, res) => {
             city, 
             age, 
             phone, 
-            skill
+            skill,
+            role
         });
-        // console.log("result: ", result);
+         console.log("result: ", result);
 
-        const newUser = await authModel.findById(result.lastID);
-        console.log(newUser);
+        const newUser = await authModel.findById(result.lastInsertRowid);
+        //console.log(newUser);
 
         const token = jwt.sign(
             {
