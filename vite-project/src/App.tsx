@@ -1,43 +1,30 @@
-import { useState } from "react";
-function Square() {
-  const [value, setValue] = useState(null);
+import "./App.css";
+import MovieCard from "./components/movieCard";
+const movies = [
+    {
+        id: 1,
+        title: "Inception",
+        release_date: "2010-07-16",
+        url: "https://example.com/inception.jpg"
+    },
+    {
+        id: 2,
+        title: "The Dark Knight",
+        release_date: "2008-07-18",
+        url: "https://example.com/dark-knight.jpg"
+    }
+];
 
-  function handleClick() {
-    setValue('X');
-  }
+function App() {
+
   return (
-    <button className="square" onClick={handleClick}>
-      {value}
-    </button>
-  );
+    <>
+      {movies.map(movie => {
+        <MovieCard key ={movie.id} movie ={movie}/>
+      })}
+    </>
+  )
 }
 
-function Board() {
-  return (
-    <div>
-      <div className="board-row">
-        <Square  />
-        <Square  />
-        <Square  />
-      </div>
-      <div className="board-row">
-        <Square  />
-        <Square  />
-        <Square  />
-      </div>
-      <div className="board-row">
-        <Square />
-        <Square  />
-        <Square  />
-      </div>
-    </div>
-  );
-}
 
-export default function App() {
-  return (
-    <div>
-      <Board />
-    </div>
-  );
-}
+export default App;

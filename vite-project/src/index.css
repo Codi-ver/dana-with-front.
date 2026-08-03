@@ -50,33 +50,6 @@
   }
 }
 
-.square {
-  background:rgb(187, 131, 200);
-  border: 2px solid #030101;
-  font-size: 28px;
-  display:inline-block;
-  font-weight: bold;
-  line-height: 34px;
-  height: 50px;      /* ارتفاع دکمه */
-  width: 50px;       /* عرض دکمه */
-  margin-right: -1px;
-  margin-top: -1px;
-  padding: 0;
-  text-align: center;
-}
-/* وقتی دکمه کلیک می‌شود */
-.square:active {
-  background-color: #b042c1;  /* رنگ بنفش پررنگ‌تر */
-  transform: scale(0.95);     /* دکمه کمی فشرده شود */
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); /* یک سایه زیبا */
-}
-
-/* وقتی ماوس را روی دکمه می‌برید (حتی بدون کلیک) */
-.square:hover {
-  background-color: #e9d5ff;  /* رنگ بنفش روشن‌تر */
-  cursor: pointer;            /* ماوس تبدیل به انگشت شود */
-}
-
 #root {
   width: 1126px;
   max-width: 100%;
@@ -136,5 +109,3 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
-
-
