@@ -5,16 +5,16 @@ const newsTable = () => {
     db.exec(`
         CREATE TABLE IF NOT EXIST news (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        event TEXT NUT NULL,
+        title TEXT NUT NULL,
         image TEXT,
-        author_id INTEGER NOT NULL,
+        event TEXT,
+        creator INTEGER NOT NULL,
         status TEXT DEFAULT 'draft',
         FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULsubmittedT CURRENT_TIMESTAMP
     )`);
     console.log("✅ جدول users ایجاد شد");
-
   } catch (err: any) {
     console.error(err.message);
   }
@@ -23,24 +23,22 @@ const newsTable = () => {
 newsTable();
 
 interface ICreate {
-  event: string,
-  image: string,
-  author_id: number
+  event: string;
+  image: string;
+  author_id: number;
 }
 
 const newsModel = {
   getAll: () => {
     const stmt = db.prepare(`SELECT * FROM news`);
     return stmt.get();
-
   },
   create: (data: ICreate) => {
     const stmt = db.prepare(`
-      SELECT INTO news (event, emage, author_id)
+      SELECT INTO news (event, image, creator)
       VALUES (?, ?, ?)`);
-    
-    return stmt.run(data);
 
+    return stmt.run(data);
   },
   deleteNew: (id: number) => {
     const stmt = db.prepare(`
@@ -52,16 +50,23 @@ const newsModel = {
     const stmt = db.prepare(`
       SELECT * FROM news WHERE id = ?`);
     return stmt.get(id);
-
-  }, 
-  publish: (event: string, status: string) => {
-    const stmt = db.prepare(`
-      SELECT INTO news (event, status) 
-      VALUES (?, ?)`);
-
-    return stmt.run(event, status);
   },
-  
-  update: () => {}
-}
+  publish: (id: number) => {
+    const stmt = db.prepare(`
+      SET status = 'published' WHERE id = ?`);
+
+    return stmt.run(id);
+  },
+  getLatest: () => {
+    const stmt = db.prepare(`SELECT *
+      FROM news 
+      ORDER BY created_at DESC 
+      LIMIT ?
+    `);
+
+    return stmt.all(3);
+  },
+
+  update: () => {},
+};
 export default newsModel;

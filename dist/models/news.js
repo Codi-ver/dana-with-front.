@@ -1,24 +1,59 @@
-export {};
-/*import db from "../server";
-
+import db from "../db.js";
 const newsTable = () => {
-  try {
-    const table = db.prepare(`
+    try {
+        db.exec(`
         CREATE TABLE IF NOT EXIST news (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        event TEXT NUT NULL,
+        title TEXT NUT NULL,
         image TEXT,
-        author_id INTEGER NOT NULL,
+        event TEXT,
+        creator INTEGER NOT NULL,
         status TEXT DEFAULT 'draft',
         FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULsubmittedT CURRENT_TIMESTAMP
     )`);
-    table.run();
-  } catch (err: any) {
-    console.error(err.message);
-  }
+        console.log("✅ جدول users ایجاد شد");
+    }
+    catch (err) {
+        console.error(err.message);
+    }
 };
-
-export default newsTable;
-*/ 
+newsTable();
+const newsModel = {
+    getAll: () => {
+        const stmt = db.prepare(`SELECT * FROM news`);
+        return stmt.get();
+    },
+    create: (data) => {
+        const stmt = db.prepare(`
+      SELECT INTO news (event, image, creator)
+      VALUES (?, ?, ?)`);
+        return stmt.run(data);
+    },
+    deleteNew: (id) => {
+        const stmt = db.prepare(`
+      DELETE * FROM news WHERE id = ?`);
+        return stmt.run(id);
+    },
+    getOne: (id) => {
+        const stmt = db.prepare(`
+      SELECT * FROM news WHERE id = ?`);
+        return stmt.get(id);
+    },
+    publish: (id) => {
+        const stmt = db.prepare(`
+      SET status = 'published' WHERE id = ?`);
+        return stmt.run(id);
+    },
+    getLatest: () => {
+        const stmt = db.prepare(`SELECT *
+      FROM news 
+      ORDER BY created_at DESC 
+      LIMIT ?
+    `);
+        return stmt.all(3);
+    },
+    update: () => { },
+};
+export default newsModel;

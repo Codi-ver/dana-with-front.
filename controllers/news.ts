@@ -1,10 +1,30 @@
-/*
 import { Request, Response } from "express";
-const getAll = async (req: Request , res: Response) => {}
-const create = async (req: Request , res: Response) => {}
-const deleteNew = async (req: Request , res: Response) => {}
-const getOne = async (req: Request , res: Response) => {}
-const publish = async (req: Request , res: Response) => {}
+import newsModel from "../models/news.js";
+const getAll = async (res: Response) => {
+  const news = await newsModel.getAll();
+  res.json(news);
+};
+const create = async (req: Request, res: Response) => {
+  await newsModel.create(req.body);
+  res.json("News created successfully :)");
+};
+const deleteNews = async (req: Request, res: Response) => {
+  await newsModel.deleteNew(Number(req.params.id));
+  res.json("News deleted successfully :)");
+};
+const getOne = async (req: Request, res: Response) => {
+  const desiredNews = await newsModel.getOne(Number(req.params.id));
+  res.json(desiredNews);
+};
+const publish = async (req: Request, res: Response) => {
+  await newsModel.publish(Number(req.params.id));
+  res.json("News updated successfully :)");
+};
+const getLatest = async (res: Response) => {
+  const latestNews = await newsModel.getLatest();
+  res.json(latestNews);
+};
 
-export {getAll, create, deleteNew, updateNew, getOne, publish};
-*/
+//const update = async (req: Request, res: Response) => {}
+
+export { getAll, create, deleteNews, getOne, publish, getLatest };

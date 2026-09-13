@@ -20,9 +20,9 @@ const authMiddleware = (req, res, next) => {
             throw new Error("Invalid token payload");
         }
         const stmt = db.prepare(`
-            SELECT role, id
-            FROM users
-            WHERE id = ?`);
+      SELECT role, id
+      FROM users
+      WHERE id = ?`);
         let user = stmt.get(jwtPayload.id);
         if (!user) {
             return res.status(404).json({ err: "User not found!" });

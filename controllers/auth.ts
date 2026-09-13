@@ -81,39 +81,44 @@ const register = async (req: Request, res: Response): Promise<IResponse> => {
 };
 
 interface IBody {
-    identifier: string,
-    password: string
+  identifier: string;
+  password: string;
 }
-const login = async (req: Request<{}, {}, IBody>, res: Response) : Promise<Response<IResponse>>=> {
-    const {identifier , password} = req.body;
-    // identifier -> phone or email
-    const  hashedPassword = bcrypt.hashSync(password, 10);
-    const stmt = db.prepare(`
+const login = async (
+  req: Request<{}, {}, IBody>,
+  res: Response,
+): Promise<Response<IResponse>> => {
+  const { identifier, password } = req.body;
+  // identifier -> phone or email
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const stmt = db.prepare(`
         SELECT password FROM users WHERE email= ?`);
-    
-    const passwordSaved = stmt.get(identifier);
 
+  const passwordSaved = stmt.get(identifier);
 
-    if (!passwordSaved) { // hash
-        return res.status(404).json({err: "User with this email not found!"})
-    }
-    
-    if (hashedPassword != passwordSaved){
-        return res.status(401).json({err: "Password not correct!"});
-    }
+  if (!passwordSaved) {
+    // hash
+    return res.status(404).json({ err: "User with this email not found!" });
+  }
 
-    const token = jwt.sign({
-        email: identifier
-      },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "168h" },
-    );
+  if (hashedPassword != passwordSaved) {
+    return res.status(401).json({ err: "Password not correct!" });
+  }
 
-    return res.json({data: {
-        message: "You login successfully",
-        token
-    }})
+  const token = jwt.sign(
+    {
+      email: identifier,
+    },
+    process.env.JWT_SECRET as string,
+    { expiresIn: "168h" },
+  );
 
+  return res.json({
+    data: {
+      message: "You login successfully",
+      token,
+    },
+  });
 };
 
 export { register, login };

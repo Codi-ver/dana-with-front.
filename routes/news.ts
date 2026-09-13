@@ -1,4 +1,3 @@
-/*
 import express from "express";
 const router = express.Router();
 import authMiddleware from "../middlewares/auth.js";
@@ -6,8 +5,9 @@ import isAdminMiddleware from "../middlewares/isAdmin.js";
 import {
   getAll,
   create,
-  deleteNew,
-  updateNew,
+  deleteNews,
+  //updateNew,
+  getLatest,
   getOne,
   publish,
 } from "../controllers/news.js";
@@ -19,10 +19,10 @@ router
 router
   .route("/:id")
   .get(authMiddleware, getOne)
-  .put(authMiddleware, isAdminMiddleware, updateNew)
-  .delete(authMiddleware, isAdminMiddleware, deleteNew);
+  //.put(authMiddleware, isAdminMiddleware, updateNew)
+  .delete(authMiddleware, isAdminMiddleware, deleteNews);
 
+router.route("/latest").get(getLatest);
 router.route("/publish").get(authMiddleware, isAdminMiddleware, publish);
 
 export default router;
-*/

@@ -5,19 +5,18 @@ import dotenv from "dotenv";
 dotenv.config();
 
 interface IUser {
-    id: number; 
-    role: string;
+  id: number;
+  role: string;
 }
 interface AuthRequest extends Request {
-    user?: IUser;
+  user?: IUser;
 }
-
 
 const authMiddleware = (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
-) : Response | void => {
+): Response | void => {
   const authHeader = req.header("Authorization")?.split(" ");
   if (!authHeader || authHeader.length != 2) {
     return res.status(403).json({
@@ -37,13 +36,13 @@ const authMiddleware = (
       throw new Error("Invalid token payload");
     }
     const stmt = db.prepare(`
-            SELECT role, id
-            FROM users
-            WHERE id = ?`);
+      SELECT role, id
+      FROM users
+      WHERE id = ?`);
 
     let user = stmt.get(jwtPayload.id) as IUser | undefined;
     if (!user) {
-        return res.status(404).json({err: "User not found!"});
+      return res.status(404).json({ err: "User not found!" });
     }
 
     req.user = user;

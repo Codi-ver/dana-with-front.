@@ -1,5 +1,5 @@
-import { answer } from "../controllers/comments.js";
-import  db  from "../db.js";
+//import { answer } from "../controllers/comments.js";
+import db from "../db.js";
 
 const commentsTable = () => {
   try {
@@ -15,51 +15,49 @@ const commentsTable = () => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-        console.log("✅ جدول users ایجاد شد");
-    }
-    catch(err: any) {
-      console.error('❌ خطا:', err.message);
-    }
+    console.log("✅ جدول users ایجاد شد");
+  } catch (err: any) {
+    console.error("❌ خطا:", err.message);
+  }
 };
 
- commentsTable();
+commentsTable();
 
 interface ICreateComment {
-  comment: string,
-  author_id: number,
-  service_id: number
+  comment: string;
+  author_id: number;
+  service_id: number;
 }
 
-
 const commentModel = {
-  findById : (id: number) => {
+  findById: (id: number) => {
     const stmt = db.prepare(`SELECT * FROM comments WHERE id = ?`);
     return stmt.get(id);
   },
-  
+
   createComment: (data: ICreateComment) => {
     const stmt = db.prepare(`
       INSERT INTO comments (comments, author_id, service_id) 
       VALUES (?, ?, ?)`);
 
-    return stmt.get(data);
+    return stmt.run(data);
   },
 
-  removeComment :  (id: number) => {
+  removeComment: (id: number) => {
     const stmt = db.prepare(`
     DELETE FROM users WHERE id = ?;`);
-    return stmt.get(id);
+    return stmt.run(id);
   },
 
-  allComments : () => {
+  allComments: () => {
     const stmt = db.prepare(`SELECT * FROM comments`);
-    return stmt.get();
+    return stmt.all();
   },
 
-  answerToComment : (id: number, answer: string) => {
-    const stmt = db.prepare(`UPDATE comments SET answer = ? WHERE id = ?`)
+  answerToComment: (id: number, answer: string) => {
+    const stmt = db.prepare(`UPDATE comments SET answer = ? WHERE id = ?`);
     return stmt.run(answer, id);
-  }
-}
+  },
+};
 
 export default commentModel;

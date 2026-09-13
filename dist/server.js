@@ -1,10 +1,9 @@
 import app from "./app.js";
-import dotenv from "dotenv";
-dotenv.config();
-const port = process.env.PORT;
 import db from "./db.js";
-app.listen(port, () => {
-    console.log(`🚀 Server running on port ${port} `);
+import env from "dotenv";
+env.config();
+app.listen(4000, () => {
+    console.log(`🚀 Server running on port 4000`);
 });
 process.on("SIGINT", () => {
     db.close();
