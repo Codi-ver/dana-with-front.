@@ -27,7 +27,7 @@ function LoginPage() {
 
       if (response.ok) {
         setSuccess("ورود موفقیت آمیز بود  ");
-        localStorage.setItem("token", data.token);
+        //localStorage.setItem("token", data.token);
         navigate("/dashboard");
       }
     } catch (err: any) {

@@ -6,23 +6,19 @@ import {
   getAll,
   create,
   deleteNews,
-  //updateNew,
-  getLatest,
+  latest,
   getOne,
   publish,
 } from "../controllers/news.js";
 
-router
-  .route("/")
-  .get(authMiddleware, getAll)
-  .post(authMiddleware, isAdminMiddleware, create);
+router.route("/latest").get(latest);
+
+router.route("/").get(getAll).post(authMiddleware, isAdminMiddleware, create);
+
+router.route("/publish").get(authMiddleware, isAdminMiddleware, publish);
 router
   .route("/:id")
-  .get(authMiddleware, getOne)
-  //.put(authMiddleware, isAdminMiddleware, updateNew)
+  .get(getOne)
   .delete(authMiddleware, isAdminMiddleware, deleteNews);
-
-router.route("/latest").get(getLatest);
-router.route("/publish").get(authMiddleware, isAdminMiddleware, publish);
 
 export default router;

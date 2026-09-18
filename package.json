@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch ./dist/server.js"
+    "dev": "npx tsx --watch server.ts "
   },
   "keywords": [],
   "author": "Sabzlearn",
@@ -27,7 +27,8 @@
     "pnpm": "^11.18.0",
     "react": "^19.2.8",
     "react-router-dom": "^7.18.3",
-    "sqlite": "^5.1.1"
+    "sqlite": "^5.1.1",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

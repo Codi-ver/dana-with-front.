@@ -1,6 +1,6 @@
 import servicesModel from "../models/services.js";
 import { Request, Response } from "express";
-const getAll = async (res: Response) => {
+const getAll = async (req: Request, res: Response) => {
   const services = await servicesModel.getAll();
   res.json(services);
 };

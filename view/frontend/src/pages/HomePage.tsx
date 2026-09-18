@@ -1,10 +1,9 @@
 import { useNavigate, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "../App.css";
-import { useState } from "react";
 
 function App() {
-  const navigate = useNavigate(); // guiding
+  const navigate = useNavigate();
   const [error, setError] = useState("");
   const [data, setData] = useState<any[]>([]);
 
@@ -14,7 +13,7 @@ function App() {
         const response = await fetch("http://localhost:4000/news/latest", {
           method: "GET",
           headers: {
-            " Content-Type": "application/json",
+            "Content-Type": "application/json",
           },
         });
         const news = await response.json();
@@ -27,8 +26,9 @@ function App() {
         setError(err.message);
       }
     };
+
     LatestNews();
-  });
+  }, []);
 
   return (
     <div className="panel">
@@ -58,7 +58,6 @@ function App() {
         </div>
       </div>
 
-      {/* ===== بخش استخدام و محصولات کنار هم ===== */}
       <div className="services-wrapper">
         <div className="service-item">
           <p className="service-title">استخدام</p>
@@ -80,7 +79,6 @@ function App() {
         </div>
       </div>
 
-      {/* فوتر */}
       <footer className="footer">
         <Link to="/contactUs" className="about-link">
           ارتباط با ما
@@ -91,15 +89,10 @@ function App() {
         <div className="latest-news">
           {data.map((news) => (
             <div key={news.id} className="news-card">
-              {news.image && (
-                <Link to={`/news/${news.id}`}>
-                  <img
-                    src={news.image}
-                    alt={news.title}
-                    className="news-image"
-                  />
-                </Link>
-              )}
+              <Link to={`/news/${news.id}`}>
+                <img src={news.image} alt={news.title} className="news-image" />
+              </Link>
+
               <p className="news-title">{news.title}</p>
               <span className="image-date">
                 📅 {new Date(news.created_at).toLocaleDateString("fa-IR")}

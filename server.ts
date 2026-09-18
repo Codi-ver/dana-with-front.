@@ -1,7 +1,7 @@
-import app from "./app.js";
-import db from "./db.js";
 import env from "dotenv";
 env.config();
+import app from "./app.js";
+import db from "./db.js";
 
 app.listen(4000, () => {
   console.log(`🚀 Server running on port 4000`);

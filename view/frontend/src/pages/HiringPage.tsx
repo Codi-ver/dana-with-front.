@@ -8,6 +8,7 @@ function HiringPage() {
     city: "",
     skill: "",
     resume: "",
+    password: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ function HiringPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData), // ← این خیلی مهمه!
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -41,9 +42,11 @@ function HiringPage() {
         throw new Error(data || "خطا در فرآیند استخدام ");
       } else {
         setSuccess("درخواست شما برای استخدام با موفقیت ثبت شد");
+        setLoading(false);
       }
     } catch (err: any) {
       setError(err.message || "خطا در فرآیند استخدام");
+      setLoading(false);
     }
   };
 
@@ -54,7 +57,7 @@ function HiringPage() {
         <p className="subtitle">برای استخدام اطلاعات زیر را وارد کنید</p>{" "}
         {success && <div className="success-message">{success}</div>}
         {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="hiring-form">
           <div className="form-group">
             <label>اسم</label>
             <input
@@ -110,6 +113,26 @@ function HiringPage() {
             />
           </div>
           <div className="form-group">
+            <label>رمز</label>
+            <input
+              type="text"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>تلفن</label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
             <label>رزومه</label>
             <input
               type="text"
@@ -120,7 +143,7 @@ function HiringPage() {
             />
           </div>
           <button type="submit" disabled={loading}>
-            {loading ? "در حال استخدام..." : "استخدام شده"}
+            {loading ? "در حال استخدام..." : "استخدام "}
           </button>
         </form>
       </div>

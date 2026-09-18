@@ -1,7 +1,14 @@
 import express from "express";
 import cors from "cors";
 const app = express();
-app.use(cors);
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 import path, { dirname } from "path";
@@ -14,7 +21,6 @@ import usersRouter from "./routes/users.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import commentsRouter from "./routes/comments.js";
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/auth", authRouter);
@@ -22,7 +28,5 @@ app.use("/hiring", hiringRouter);
 app.use("/services", servicesRouter);
 app.use("/news", newsRouter);
 app.use("/users", usersRouter);
-
-app.use("/comments", commentsRouter);
 
 export default app;

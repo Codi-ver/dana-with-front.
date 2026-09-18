@@ -1,58 +1,51 @@
 import db from "../db.js";
 
-const servicesTable = () => {
+const servicesTable = async () => {
   try {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS services(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT UNIQUE NUT NULL,
-      description TEXT NUT NULL,
-      picture TEXT NUT NULL, 
-      creator_id INTEGER NUT NULL,
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS services (
+      id INTEGER PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT NOT NULL,
+      image TEXT NOT NULL,
+      creator_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
 
-    console.log("✅ جدول users ایجاد شد");
+    console.log("✅ جدول services ایجاد شد");
   } catch (err: any) {
     console.error({ "Error in creating table ": err.message });
   }
 };
 
-servicesTable();
+await servicesTable();
 
-interface ICreate {
+interface ICreateService {
   name: string;
   description: string;
   creator_id: number;
-  picture_url: string;
+  image: string;
 }
 
 const servicesModel = {
-  create: (data: ICreate) => {
+  create: (data: ICreateService) => {
+    const { name, description, creator_id, image } = data;
     const stmt = db.prepare(`
-      SELECT INTO serveces (namename, description, creator_id, picture_url)
+      INSERT INTO services (name, description, creator_id, image)
       VALUES (?, ?, ?, ?)`);
 
-    return stmt.run(data);
+    return stmt.run(name, description, creator_id, image);
   },
 
-  remove: (id: number) => {
-    const stmt = db.prepare(`DELETE FROM services WHERE id = ?`);
-    return stmt.run(id);
-  },
+  remove: (id: number) =>
+    db.prepare(`DELETE FROM services WHERE id = ?`).run(id),
 
-  getAll: () => {
-    const stmt = db.prepare(`SELECT * FROM services`);
-    return stmt.all();
-  },
+  getAll: () => db.prepare(`SELECT * FROM services`).all(),
 
-  getOne: (id: number) => {
-    const stmt = db.prepare(`SELECT * FROM services WHERE id = ?`);
-    return stmt.get(id);
-  },
+  getOne: (id: number) =>
+    db.prepare(`SELECT * FROM services WHERE id = ?`).get(id),
 };
 
 export default servicesModel;

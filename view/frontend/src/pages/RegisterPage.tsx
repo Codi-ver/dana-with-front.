@@ -9,6 +9,8 @@ function RegisterPage() {
     password: "",
     confirmPassword: "",
     age: "",
+    city: "",
+    skill: "",
     phone: "",
   });
   const [loading, setLoading] = useState(false);
@@ -42,10 +44,12 @@ function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userData), // ← این خیلی مهمه!
+        body: JSON.stringify(userData),
       });
 
       const data = await response.json();
+
+      console.log(data);
 
       if (!response.ok) {
         throw new Error(data || "خطا در ثبت نام");
@@ -60,8 +64,6 @@ function RegisterPage() {
       });
     } catch (err: any) {
       setError(err.message || "خطا در ثبت نام");
-    } finally {
-      setLoading(false);
     }
   };
   return (
@@ -86,7 +88,6 @@ function RegisterPage() {
               required
             />
           </div>
-          س..
           <div className="form-group">
             <label>ایمیل</label>
             <input
@@ -128,7 +129,28 @@ function RegisterPage() {
               name="age"
               value={formData.age}
               onChange={handleChange}
-              placeholder="20"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>شهر</label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder=""
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>حرفه</label>
+            <input
+              type="text"
+              name="skill"
+              value={formData.skill}
+              onChange={handleChange}
+              placeholder="backend"
               required
             />
           </div>
@@ -139,7 +161,6 @@ function RegisterPage() {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="0919"
               min={11}
               required
             />
