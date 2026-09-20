@@ -1,56 +1,81 @@
 import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import db from "../db.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-interface IUser {
-  id: number;
-  role: string;
-}
-interface AuthRequest extends Request {
-  user?: IUser;
-}
+export const COOKIE_NAME = "dana_token";
 
-const authMiddleware = (
-  req: AuthRequest,
+const loadUser = (id: number) =>
+  db
+    .prepare(`SELECT id, name, email, role FROM users WHERE id = ?`)
+    .get(id) as { id: number; name: string; email: string; role: string } | undefined;
+
+/**
+ * Verifies the JWT from the httpOnly cookie (Authorization: Bearer also
+ * accepted for API clients) and attaches the fresh user record to req.user.
+ * Rejects the request when there is no valid session.
+ */
+export const requireAuth = (
+  req: Request,
   res: Response,
   next: NextFunction,
-): Response | void => {
-  const authHeader = req.header("Authorization")?.split(" ");
-  if (!authHeader || authHeader.length != 2) {
-    return res.status(403).json({
-      err: "This route is protected and you can't have access to it !!",
-    });
+): void => {
+  const bearer = req.header("Authorization")?.split(" ");
+  const token = req.cookies?.[COOKIE_NAME] ?? (bearer?.length === 2 ? bearer[1] : undefined);
+
+  if (!token) {
+    res.status(401).json({ err: "ابتدا وارد حساب خود شوید" });
+    return;
   }
-  const token = authHeader[1];
 
   try {
     const secret = process.env.JWT_SECRET as string;
-    if (!secret) {
-      throw new Error("JWT_SECRET is not defined");
-    }
-    const jwtPayload = (jwt as any).verify(token, secret);
+    if (!secret) throw new Error("JWT_SECRET is not defined");
 
-    if (!jwtPayload.id) {
-      throw new Error("Invalid token payload");
-    }
-    const stmt = db.prepare(`
-      SELECT role, id
-      FROM users
-      WHERE id = ?`);
+    const payload = jwt.verify(token, secret) as { id?: number };
+    if (!payload.id) throw new Error("Invalid token payload");
 
-    let user = stmt.get(jwtPayload.id) as IUser | undefined;
+    const user = loadUser(Number(payload.id));
     if (!user) {
-      return res.status(404).json({ err: "User not found!" });
+      res.status(401).json({ err: "کاربر یافت نشد" });
+      return;
     }
 
     req.user = user;
-
-    return next();
-  } catch (err: any) {
-    return res.status(500).json(err.message);
+    next();
+  } catch {
+    // invalid signature, expired token, unknown user, …
+    res.status(401).json({ err: "نشست شما منقضی شده، دوباره وارد شوید" });
   }
 };
 
-export default authMiddleware;
+/**
+ * Same as requireAuth but never rejects — attaches req.user when a valid
+ * session exists and continues anonymously otherwise.
+ */
+export const optionalAuth = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void => {
+  const bearer = req.header("Authorization")?.split(" ");
+  const token = req.cookies?.[COOKIE_NAME] ?? (bearer?.length === 2 ? bearer[1] : undefined);
+  if (!token) {
+    next();
+    return;
+  }
+  try {
+    const secret = process.env.JWT_SECRET as string;
+    if (!secret) throw new Error("JWT_SECRET is not defined");
+    const payload = jwt.verify(token, secret) as { id?: number };
+    if (payload.id) {
+      req.user = loadUser(Number(payload.id));
+    }
+  } catch {
+    // anonymous
+  }
+  next();
+};
+
+export default requireAuth;

@@ -1,18 +1,21 @@
 import express from "express";
 const router = express.Router();
-import authMiddleware from "../middlewares/auth.js";
+import requireAuth from "../middlewares/auth.js";
 import isAdminMiddleware from "../middlewares/isAdmin.js";
-import {
-  getAll,
-  create,
-  deleteService,
-  getOne,
-} from "../controllers/services.js";
+import upload from "../utils/uploader.js";
+import { getAll, create, deleteService, getOne } from "../controllers/services.js";
 
-router.route("/").get(getAll).post(authMiddleware, isAdminMiddleware, create);
+router.get("/", getAll);
+router.post(
+  "/",
+  requireAuth,
+  isAdminMiddleware,
+  upload.single("image"),
+  create,
+);
 router
   .route("/:id")
-  .delete(authMiddleware, isAdminMiddleware, deleteService)
-  .get(authMiddleware, isAdminMiddleware, getOne);
+  .get(getOne)
+  .delete(requireAuth, isAdminMiddleware, deleteService);
 
 export default router;

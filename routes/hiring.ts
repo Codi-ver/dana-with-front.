@@ -1,7 +1,10 @@
 import express from "express";
-import hiringController from "../controllers/hiring.js";
-
 const router = express.Router();
-router.route("/fill").post(hiringController);
+import { apply, getAll } from "../controllers/hiring.js";
+import requireAuth from "../middlewares/auth.js";
+import isAdminMiddleware from "../middlewares/isAdmin.js";
+
+router.post("/apply", apply);
+router.get("/", requireAuth, isAdminMiddleware, getAll);
 
 export default router;

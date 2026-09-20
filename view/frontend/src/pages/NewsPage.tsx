@@ -1,54 +1,104 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-const NewsPage = () => {
-  const navigate = useNavigate();
-  const [error, setError] = useState<any>("");
-  const [data, setData] = useState<any[]>([]);
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "../api";
+import { useAuth } from "../auth/AuthContext";
+import type { NewsItem } from "../types";
+import { NewsCard } from "../components/Cards";
+import Reveal from "../components/Reveal";
+
+export default function NewsPage() {
+  const { isAdmin } = useAuth();
+  const [items, setItems] = useState<NewsItem[] | null>(null);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      setError("");
+      // admins also see drafts
+      const query = isAdmin ? "?all=1" : "";
+      setItems(await api<NewsItem[]>(`/news${query}`));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "خطا در دریافت اخبار");
+      setItems([]);
+    }
+  }, [isAdmin]);
+
   useEffect(() => {
-    const allNews = async () => {
-      try {
-        const response = await fetch("http://localhost:4000/news/", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const news = await response.json();
-        setData(news);
-        console.log(news);
-        if (!response.ok) {
-          throw new Error("خطا در نمایش آخرین اخبار");
-        }
-      } catch (err: any) {
-        setError(err.message);
-      }
-    };
+    load();
+  }, [load]);
 
-    allNews();
-  }, []);
+  const remove = async (id: number) => {
+    if (!confirm("این خبر حذف شود؟")) return;
+    try {
+      await api(`/news/${id}`, { method: "DELETE" });
+      setItems((prev) => prev?.filter((n) => n.id !== id) ?? null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "خطا در حذف خبر");
+    }
+  };
+
+  const publish = async (id: number) => {
+    try {
+      await api(`/news/${id}/publish`, { method: "PUT" });
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "خطا در انتشار خبر");
+    }
+  };
+
   return (
-    <div className="news-page">
-      <h1 className="title-news">اخبار</h1>
-      {error && <div className="error-message">{error}</div>}
-      <div className="all-news">
-        {data?.map((item) => (
-          <div className="news-card" key={item.id}>
-            <Link to={`/news/${item.id}`}>
-              <img src={item.image} alt={item.title} className="news-image" />
-            </Link>
-
-            <p className="news-title">{item.title}</p>
-            <span className="image-date">
-              📅 {new Date(item.created_at).toLocaleDateString("fa-IR")}
-            </span>
-          </div>
-        ))}
+    <div className="container section">
+      <div className="page-head">
+        <span className="eyebrow">اتاق خبر دانا</span>
+        <h1>اخبار و رویدادها</h1>
+        <p>آخرین خبرها، معرفی محصولات و گزارش رویدادهای شرکت را اینجا دنبال کنید.</p>
       </div>
-      <button className="button-add-news" onClick={() => navigate("/news/add")}>
-        اضافه کردن خبر
-      </button>
+
+      {error && <div className="alert alert--error">{error}</div>}
+
+      {isAdmin && (
+        <div style={{ marginBottom: "1.6rem", display: "flex", justifyContent: "flex-end" }}>
+          <Link to="/news/add" className="btn btn--primary btn--sm">
+            + خبر جدید
+          </Link>
+        </div>
+      )}
+
+      {items === null ? (
+        <div className="card-grid">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="skeleton" style={{ height: 320 }} />
+          ))}
+        </div>
+      ) : (
+        <div className="card-grid">
+          {items.map((n, i) => (
+            <Reveal key={n.id} delay={(i % 3) * 0.08}>
+              <div style={{ position: "relative" }}>
+                <NewsCard item={n} />
+                {isAdmin && (
+                  <div className="admin-table__actions" style={{ marginTop: "0.6rem" }}>
+                    {n.status !== "published" && (
+                      <button className="btn btn--sm" onClick={() => publish(n.id)}>
+                        انتشار
+                      </button>
+                    )}
+                    <button className="btn btn--danger btn--sm" onClick={() => remove(n.id)}>
+                      حذف
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Reveal>
+          ))}
+          {items.length === 0 && (
+            <div className="state-box" style={{ gridColumn: "1 / -1" }}>
+              <span>✦</span>
+              فعلاً خبری برای نمایش وجود ندارد.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-};
-
-export default NewsPage;
+}

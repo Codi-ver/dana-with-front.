@@ -1,118 +1,121 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 import usersModel from "../models/users.js";
+import { COOKIE_NAME } from "../middlewares/auth.js";
 
-interface IResponse extends Response {
-  err?: string;
-  data?: any;
-}
+const TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60; // یک هفته
 
-interface IUser {
-  id: number | bigint;
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  maxAge: TOKEN_TTL_SECONDS * 1000,
+  path: "/",
+};
+
+const issueSession = (userId: number) =>
+  jwt.sign({ id: userId }, process.env.JWT_SECRET as string, {
+    expiresIn: TOKEN_TTL_SECONDS,
+  });
+
+interface RegisterBody {
   name: string;
   email: string;
-  city: string;
   password: string;
-  age: number;
+  city: string;
+  age: number | string;
   phone: string;
   skill: string;
-  created_at?: string;
 }
-const register = async (
-  req: Request<{}, {}, IUser>,
-  res: IResponse,
-): Promise<IResponse> => {
-  const { name, email, password, city, age, phone, skill } = req.body;
+
+const register = (req: Request<{}, {}, RegisterBody>, res: Response) => {
+  const { name, email, password, city, age, phone, skill } = req.body ?? {};
+
   if (!name || !email || !password || !city || !age || !phone || !skill) {
-    return res.status(400).json({
-      err: "All fields are required!",
-    });
+    return res.status(400).json({ err: "همه فیلدها الزامی هستند" });
+  }
+  if (String(password).length < 6) {
+    return res
+      .status(400)
+      .json({ err: "رمز عبور باید حداقل ۶ کاراکتر باشد" });
+  }
+  if (Number.isNaN(Number(age)) || Number(age) < 1) {
+    return res.status(400).json({ err: "سن واردشده معتبر نیست" });
   }
 
   try {
-    const existEmail = await usersModel.findByEmail(email);
-    if (existEmail != undefined) {
-      return res.status(409).json("User with this email already registered!");
-    }
-    const existPhone = await usersModel.findByPhone(phone);
-
-    if (existPhone != undefined) {
+    if (usersModel.findByEmail(email)) {
       return res
         .status(409)
-        .json("User with this phone number already registered!");
+        .json({ err: "کاربری با این ایمیل قبلاً ثبت‌نام کرده است" });
+    }
+    if (usersModel.findByPhone(phone)) {
+      return res
+        .status(409)
+        .json({ err: "کاربری با این شماره تماس قبلاً ثبت‌نام کرده است" });
     }
 
-    const result = await usersModel.createUser({
+    const result = usersModel.createUser({
       name,
       email,
       password,
       city,
-      age,
+      age: Number(age),
       phone,
       skill,
-      role: "USER",
     });
-    const newUser = usersModel.getOne(result.lastInsertRowid);
 
-    console.log(newUser);
+    const user = usersModel.getOne(Number(result.lastInsertRowid));
+    if (!user) {
+      return res.status(500).json({ err: "خطا در ایجاد کاربر" });
+    }
 
-    const token = jwt.sign(
-      {
-        id: newUser.id,
-        email,
-        role: "USER",
-      },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "168h" },
-    );
+    res.cookie(COOKIE_NAME, issueSession(Number(user.id)), cookieOptions);
+    return res.status(201).json({ message: "ثبت‌نام با موفقیت انجام شد", user });
+  } catch (err) {
+    console.error("register:", err);
+    return res.status(500).json({ err: "خطای داخلی سرور" });
+  }
+};
 
+const login = (req: Request<{}, {}, { email?: string; password?: string }>, res: Response) => {
+  const { email, password } = req.body ?? {};
+  if (!email || !password) {
+    return res.status(400).json({ err: "ایمیل و رمز عبور الزامی است" });
+  }
+
+  try {
+    const user = usersModel.findByEmail(email);
+    if (!user) {
+      return res.status(401).json({ err: "ایمیل یا رمز عبور اشتباه است" });
+    }
+
+    if (!bcrypt.compareSync(password, user.password)) {
+      return res.status(401).json({ err: "ایمیل یا رمز عبور اشتباه است" });
+    }
+
+    res.cookie(COOKIE_NAME, issueSession(Number(user.id)), cookieOptions);
     return res.json({
-      message: "User registered successfully!",
-      token,
+      message: "با موفقیت وارد شدید",
+      user: usersModel.getOne(Number(user.id)),
     });
-  } catch (err: any) {
-    return res.status(500).json({ err: err.message });
+  } catch (err) {
+    console.error("login:", err);
+    return res.status(500).json({ err: "خطای داخلی سرور" });
   }
 };
 
-interface IBody {
-  email: string;
-  password: string;
-}
-const login = async (
-  req: Request<{}, {}, IBody>,
-  res: Response,
-): Promise<Response<IResponse>> => {
-  const { email, password } = req.body;
-
-  const existEmail = usersModel.findByEmail(email);
-  if (!existEmail) {
-    return res.status(404).json("User with this email not found!");
-  }
-
-  const hashedPassword = bcrypt.hashSync(password, 10);
-
-  if (hashedPassword != existEmail.password) {
-    return res.status(401).json({ err: "Password not correct!" });
-  }
-
-  const token = jwt.sign(
-    {
-      email,
-    },
-    process.env.JWT_SECRET as string,
-    { expiresIn: "168h" },
-  );
-
-  return res.json({
-    data: {
-      message: "You login successfully",
-      token,
-    },
-  });
+const logout = (_req: Request, res: Response) => {
+  res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: undefined });
+  return res.json({ message: "با موفقیت خارج شدید" });
 };
 
-export { register, login };
+const me = (req: Request, res: Response) => {
+  // requireAuth guarantees req.user here
+  return res.json({ user: usersModel.getOne(req.user!.id) ?? req.user });
+};
+
+export { register, login, logout, me };

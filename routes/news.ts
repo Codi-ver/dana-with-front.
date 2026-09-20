@@ -1,7 +1,8 @@
 import express from "express";
 const router = express.Router();
-import authMiddleware from "../middlewares/auth.js";
+import requireAuth, { optionalAuth } from "../middlewares/auth.js";
 import isAdminMiddleware from "../middlewares/isAdmin.js";
+import upload from "../utils/uploader.js";
 import {
   getAll,
   create,
@@ -11,14 +12,20 @@ import {
   publish,
 } from "../controllers/news.js";
 
-router.route("/latest").get(latest);
+router.get("/latest", latest);
+router.get("/", optionalAuth, getAll);
+router.post(
+  "/",
+  requireAuth,
+  isAdminMiddleware,
+  upload.single("image"),
+  create,
+);
 
-router.route("/").get(getAll).post(authMiddleware, isAdminMiddleware, create);
-
-router.route("/publish").get(authMiddleware, isAdminMiddleware, publish);
 router
   .route("/:id")
   .get(getOne)
-  .delete(authMiddleware, isAdminMiddleware, deleteNews);
+  .delete(requireAuth, isAdminMiddleware, deleteNews);
+router.put("/:id/publish", requireAuth, isAdminMiddleware, publish);
 
 export default router;
